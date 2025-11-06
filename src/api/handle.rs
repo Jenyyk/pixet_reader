@@ -43,14 +43,18 @@ impl PixHandle {
     pub fn get_device(&self, builder: DeviceBuilder) -> PxcResult<impl Device> {
         match builder.info.r#type {
             DevType::Tpx => {
+                let mut width: std::ffi::c_uint = 0;
+                let mut height: std::ffi::c_uint = 0;
                 unsafe {
                     pxcSetTimepixMode(builder.index, TpxMode::Tot as i32).check_rc()?;
                     pxcSetBias(builder.index, builder.high_voltage.unwrap_or(40.0)).check_rc()?;
                     pxcSetThreshold(builder.index, 0, builder.threshold.unwrap_or(200.0)).check_rc()?;
+                    pxcGetDeviceDimensions(builder.index, &mut width, &mut height).check_rc()?;
                 }
                 Ok(TpxDevice {
                     index: builder.index,
                     frame_time: builder.frame_time.unwrap_or(2.0),
+                    dimensions: (width, height),
                 })
             }
             _ => unimplemented!(),

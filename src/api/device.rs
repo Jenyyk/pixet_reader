@@ -8,6 +8,7 @@ use crate::api::ffi::{PxcBuffer, PxcResult};
 pub trait Device {
     fn capture_image(&self) -> PxcResult<PxcBuffer>;
     fn save_last_frame(&self, file_path: impl Into<String>) -> PxcResult<()>;
+    fn get_dimensions(&self) -> (std::ffi::c_uint, std::ffi::c_uint);
 }
 
 pub enum TpxMode {
@@ -22,6 +23,7 @@ pub enum TpxMode {
 pub struct TpxDevice {
     pub index: std::ffi::c_uint,
     pub frame_time: std::ffi::c_double,
+    pub dimensions: (std::ffi::c_uint, std::ffi::c_uint),
 }
 
 impl Device for TpxDevice {
@@ -45,5 +47,9 @@ impl Device for TpxDevice {
             pxcSaveMeasuredFrame(self.index, 0, c_file_path.as_ptr()).check_rc()?;
         }
         Ok(())
+    }
+
+    fn get_dimensions(&self) -> (std::ffi::c_uint, std::ffi::c_uint) {
+        self.dimensions
     }
 }

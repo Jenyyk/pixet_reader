@@ -71,6 +71,7 @@ unsafe extern "C" {
     pub fn pxcRefreshDevices() -> c_int;
 
     pub fn pxcGetDeviceName(index: c_uint, nameBuffer: *mut c_char, size: c_uint) -> c_int;
+    pub fn pxcGetDeviceDimensions(index: c_uint, width: *mut c_uint, height: *mut c_uint) -> c_int;
     pub fn pxcGetDeviceInfo(index: c_uint, devInfo: *mut crate::api::handle::CDevInfo) -> c_int;
 
     pub fn pxcLoadFactoryConfig(index: c_uint) -> c_int;
