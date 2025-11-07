@@ -4,7 +4,7 @@ use std::ffi::CString;
 
 use crate::api::ffi::*;
 use crate::api::ffi::{PxcBuffer, PxcResult};
-use std::ffi::{c_uint, c_double};
+use std::ffi::{c_double, c_uint};
 
 pub trait Device {
     fn capture_image(&self) -> PxcResult<PxcBuffer>;

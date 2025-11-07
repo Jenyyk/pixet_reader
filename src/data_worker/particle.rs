@@ -18,7 +18,10 @@ impl Particle {
         let top_most_coord = self.positions.iter().min_by_key(|pos| pos.1).unwrap().1;
         let bottom_most_coord = self.positions.iter().max_by_key(|pos| pos.1).unwrap().1;
 
-        let size = usize::max(right_most_coord - left_most_coord, bottom_most_coord - top_most_coord);
+        let size = usize::max(
+            right_most_coord - left_most_coord,
+            bottom_most_coord - top_most_coord,
+        );
 
         if size >= 12 {
             self.particle_type = ParticleType::PossibleMuon(size);

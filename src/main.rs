@@ -16,7 +16,7 @@ fn main() {
 
     let max_voltage = match device.get_voltage_range() {
         Ok((_min, max)) => max,
-        Err(_) => 80.0
+        Err(_) => 80.0,
     };
     println!("Applying max voltage of {}V", max_voltage);
     device.set_high_voltage(max_voltage).unwrap();
@@ -27,7 +27,7 @@ fn main() {
 
         let image = image_buffer
             .chunks(device.get_dimensions().0 as usize)
-            .map(|buf| buf.into_iter().cloned().collect::<Vec<_>>())
+            .map(|buf| buf.to_vec())
             .collect::<Vec<_>>();
 
         let mut frame = data_worker::frame::Frame::new(image);
@@ -39,7 +39,9 @@ fn main() {
             match particle.particle_type {
                 ParticleType::PossibleMuon(size) => {
                     println!("Found muon of size {}", size);
-                    device.save_last_frame(format!("muon{}.png", muons_found)).unwrap();
+                    device
+                        .save_last_frame(format!("muon{}.png", muons_found))
+                        .unwrap();
                     muons_found += 1;
                     let mut log = std::fs::OpenOptions::new()
                         .create(true)
@@ -48,8 +50,8 @@ fn main() {
                         .unwrap();
                     log.write_all(format!("{:?}", frame).as_bytes()).unwrap();
                     log.flush().unwrap();
-                },
-                _ => {},
+                }
+                _ => {}
             }
         }
     }

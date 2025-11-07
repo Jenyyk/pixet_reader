@@ -20,7 +20,7 @@ impl Frame {
     }
 
     pub fn count_particles(&mut self, mut kernel_size: usize) {
-        if kernel_size % 2 == 0 {
+        if kernel_size.is_multiple_of(2) {
             kernel_size += 1;
         }
 
@@ -71,20 +71,23 @@ impl Frame {
                 for dy in -kernel_radius..=kernel_radius {
                     for dx in -kernel_radius..=kernel_radius {
                         if dy == 0 && dx == 0 {
-                            continue; // Skip the current pixel
+                            continue;
                         }
 
                         let ni = i as isize + dy;
                         let nj = j as isize + dx;
 
                         // Check if the neighbor is within bounds and has been processed
-                        if ni >= 0 && ni < rows as isize && nj >= 0 && nj < cols as isize {
-                            if ni < i as isize || (ni == i as isize && nj < j as isize) {
-                                let ni = ni as usize;
-                                let nj = nj as usize;
-                                if !labeled_data[ni][nj].1.is_empty() {
-                                    neighbor_labels.extend(labeled_data[ni][nj].1.iter());
-                                }
+                        if ni >= 0
+                            && ni < rows as isize
+                            && nj >= 0
+                            && nj < cols as isize
+                            && (ni < i as isize || (ni == i as isize && nj < j as isize))
+                        {
+                            let ni = ni as usize;
+                            let nj = nj as usize;
+                            if !labeled_data[ni][nj].1.is_empty() {
+                                neighbor_labels.extend(labeled_data[ni][nj].1.iter());
                             }
                         }
                     }
@@ -93,9 +96,7 @@ impl Frame {
                 if neighbor_labels.is_empty() {
                     // This is a new component, so we assign a new label.
                     labeled_data[i][j].1.push(label_counter);
-                    if label_counter < 255 {
-                        label_counter += 1;
-                    }
+                    label_counter = label_counter.saturating_add(1);
                 } else {
                     // This pixel is connected to one or more existing components.
                     // We apply all unique neighbor labels to this pixel.
@@ -113,7 +114,6 @@ impl Frame {
             }
         }
 
-        // Second pass: Group pixels by their root label.
         let mut particle_pixels: HashMap<u8, Vec<(usize, usize, i16)>> = HashMap::new();
 
         for i in 0..rows {
@@ -130,10 +130,8 @@ impl Frame {
         }
 
         self.particles = particle_pixels
-            .into_iter()
-            .map(|(_id, pixels)| {
-                Particle::new(pixels)
-            })
+            .into_values()
+            .map(Particle::new)
             .collect();
     }
 }
