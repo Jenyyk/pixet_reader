@@ -82,7 +82,7 @@ impl Device for TpxDevice {
     }
     fn set_high_voltage(&self, voltage: c_double) -> PxcResult<()> {
         unsafe {
-            pxcSetBias(self.index, voltage);
+            pxcSetBias(self.index, voltage).check_rc()?;
         }
         Ok(())
     }
