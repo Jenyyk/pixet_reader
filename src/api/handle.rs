@@ -47,16 +47,16 @@ impl PixHandle {
                 let mut height: std::ffi::c_uint = 0;
                 unsafe {
                     pxcSetTimepixMode(builder.index, TpxMode::Tot as i32).check_rc()?;
-                    pxcSetBias(builder.index, builder.high_voltage.unwrap_or(40.0)).check_rc()?;
-                    pxcSetThreshold(builder.index, 0, builder.threshold.unwrap_or(200.0))
-                        .check_rc()?;
                     pxcGetDeviceDimensions(builder.index, &mut width, &mut height).check_rc()?;
                 }
-                Ok(TpxDevice {
+                let device = TpxDevice {
                     index: builder.index,
                     frame_time: builder.frame_time.unwrap_or(2.0),
                     dimensions: (width, height),
-                })
+                };
+                device.set_high_voltage(builder.high_voltage.unwrap_or(40.0))?;
+                device.set_threshold(builder.threshold.unwrap_or(200.0))?;
+                Ok(device)
             }
             _ => unimplemented!(),
         }

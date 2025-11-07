@@ -76,6 +76,7 @@ unsafe extern "C" {
 
     pub fn pxcLoadFactoryConfig(index: c_uint) -> c_int;
 
+    pub fn pxcGetBiasRange(index: c_uint, minBias: *mut c_double, maxBias: *mut c_double) -> c_int;
     pub fn pxcSetBias(index: c_uint, bias: c_double) -> c_int;
     pub fn pxcSetThreshold(index: c_uint, thresholdIndex: c_int, threshold: c_double) -> c_int;
     pub fn pxcSetTimepixMode(index: c_uint, mode: c_int) -> c_int;

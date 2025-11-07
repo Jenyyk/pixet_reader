@@ -10,13 +10,20 @@ fn main() {
 
     let builder = api::handle::DeviceBuilder::new(0)
         .frame_time(0.5)
-        .threshold(10.0)
-        .high_voltage(80.0);
+        .threshold(10.0);
+
     let device = handle.get_device(builder).unwrap();
 
+    let max_voltage = match device.get_voltage_range() {
+        Ok((_min, max)) => max,
+        Err(_) => 80.0
+    };
+    println!("Applying max voltage of {}V", max_voltage);
+    device.set_high_voltage(max_voltage).unwrap();
+
+    let mut muons_found = 0;
     loop {
         let image_buffer = device.capture_image().unwrap();
-        device.save_last_frame("output.png").unwrap();
 
         let image = image_buffer
             .chunks(device.get_dimensions().0 as usize)
@@ -32,6 +39,8 @@ fn main() {
             match particle.particle_type {
                 ParticleType::PossibleMuon(size) => {
                     println!("Found muon of size {}", size);
+                    device.save_last_frame(format!("muon{}.png", muons_found)).unwrap();
+                    muons_found += 1;
                     let mut log = std::fs::OpenOptions::new()
                         .create(true)
                         .append(true)
@@ -39,7 +48,7 @@ fn main() {
                         .unwrap();
                     log.write_all(format!("{:?}", frame).as_bytes()).unwrap();
                     log.flush().unwrap();
-                    },
+                },
                 _ => {},
             }
         }

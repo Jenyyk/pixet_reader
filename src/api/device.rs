@@ -4,11 +4,17 @@ use std::ffi::CString;
 
 use crate::api::ffi::*;
 use crate::api::ffi::{PxcBuffer, PxcResult};
+use std::ffi::{c_uint, c_double};
 
 pub trait Device {
     fn capture_image(&self) -> PxcResult<PxcBuffer>;
     fn save_last_frame(&self, file_path: impl Into<String>) -> PxcResult<()>;
-    fn get_dimensions(&self) -> (std::ffi::c_uint, std::ffi::c_uint);
+    fn get_dimensions(&self) -> (c_uint, c_uint);
+
+    fn get_voltage_range(&self) -> PxcResult<(c_double, c_double)>;
+    fn set_high_voltage(&self, voltage: c_double) -> PxcResult<()>;
+    fn set_threshold(&self, threshold: c_double) -> PxcResult<()>;
+    fn set_frame_time(&mut self, seconds: c_double) -> PxcResult<()>;
 }
 
 pub enum TpxMode {
@@ -52,5 +58,32 @@ impl Device for TpxDevice {
 
     fn get_dimensions(&self) -> (std::ffi::c_uint, std::ffi::c_uint) {
         self.dimensions
+    }
+
+    fn set_threshold(&self, threshold: c_double) -> PxcResult<()> {
+        unsafe {
+            pxcSetThreshold(self.index, 0, threshold).check_rc()?;
+        }
+        Ok(())
+    }
+
+    fn set_frame_time(&mut self, seconds: c_double) -> PxcResult<()> {
+        self.frame_time = seconds;
+        Ok(())
+    }
+
+    fn get_voltage_range(&self) -> PxcResult<(c_double, c_double)> {
+        let mut min_voltage = 0.0;
+        let mut max_voltage = 0.0;
+        unsafe {
+            pxcGetBiasRange(self.index, &mut min_voltage, &mut max_voltage).check_rc()?;
+        }
+        Ok((min_voltage, max_voltage))
+    }
+    fn set_high_voltage(&self, voltage: c_double) -> PxcResult<()> {
+        unsafe {
+            pxcSetBias(self.index, voltage);
+        }
+        Ok(())
     }
 }
