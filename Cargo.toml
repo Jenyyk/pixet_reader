@@ -5,3 +5,6 @@ edition = "2024"
 build = "build.rs"
 
 [dependencies]
+
+[build]
+rustflags = ["-C", "link-args=-Wl,-rpath,$ORIGIN"]

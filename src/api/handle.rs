@@ -48,7 +48,8 @@ impl PixHandle {
                 unsafe {
                     pxcSetTimepixMode(builder.index, TpxMode::Tot as i32).check_rc()?;
                     pxcSetBias(builder.index, builder.high_voltage.unwrap_or(40.0)).check_rc()?;
-                    pxcSetThreshold(builder.index, 0, builder.threshold.unwrap_or(200.0)).check_rc()?;
+                    pxcSetThreshold(builder.index, 0, builder.threshold.unwrap_or(200.0))
+                        .check_rc()?;
                     pxcGetDeviceDimensions(builder.index, &mut width, &mut height).check_rc()?;
                 }
                 Ok(TpxDevice {

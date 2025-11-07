@@ -31,7 +31,8 @@ impl Device for TpxDevice {
         let mut data_buf: PxcBuffer = [0; 65536];
         let mut size: std::ffi::c_uint = 65536;
         unsafe {
-            pxcMeasureSingleFrame(self.index, self.frame_time, &mut data_buf, &mut size).check_rc()?;
+            pxcMeasureSingleFrame(self.index, self.frame_time, &mut data_buf, &mut size)
+                .check_rc()?;
 
             if size == 0 {
                 size = 65536;

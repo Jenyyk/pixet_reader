@@ -4,3 +4,5 @@
 PIXetAPIC.pdf
 *.h
 output.png
+/*.so
+/*.ini
