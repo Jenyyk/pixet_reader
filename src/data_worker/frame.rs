@@ -1,7 +1,7 @@
 use crate::data_worker::particle::Particle;
 use std::collections::{HashMap, HashSet};
 
-#[derive(Default, Debug)]
+#[derive(Clone, Default, Debug)]
 pub struct Frame {
     pub data: Vec<Vec<i16>>,
     particles: Vec<Particle>,
@@ -17,6 +17,10 @@ impl Frame {
 
     pub fn get_particles(&self) -> Vec<Particle> {
         self.particles.clone()
+    }
+
+    pub fn get_particles_mut(&mut self) -> &mut Vec<Particle> {
+        &mut self.particles
     }
 
     pub fn count_particles(&mut self, mut kernel_size: usize) {
@@ -129,9 +133,6 @@ impl Frame {
             }
         }
 
-        self.particles = particle_pixels
-            .into_values()
-            .map(Particle::new)
-            .collect();
+        self.particles = particle_pixels.into_values().map(Particle::new).collect();
     }
 }

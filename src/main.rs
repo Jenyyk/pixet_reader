@@ -18,8 +18,8 @@ fn main() {
         Ok((_min, max)) => max,
         Err(_) => 80.0,
     };
-    println!("Applying max voltage of {}V", max_voltage);
-    device.set_high_voltage(max_voltage).unwrap();
+    println!("Found max voltage of {}V", max_voltage);
+    device.set_high_voltage(100.0).unwrap();
 
     let mut muons_found = 0;
     loop {
@@ -33,9 +33,11 @@ fn main() {
         let mut frame = data_worker::frame::Frame::new(image);
         frame.count_particles(12);
 
-        let mut frame_particles = frame.get_particles();
-        for particle in &mut frame_particles {
+        for particle in frame.get_particles_mut() {
             particle.calculate_type();
+        }
+
+        for particle in frame.get_particles() {
             match particle.particle_type {
                 ParticleType::PossibleMuon(size) => {
                     println!("Found muon of size {}", size);
@@ -49,6 +51,7 @@ fn main() {
                         .open("log.txt")
                         .unwrap();
                     log.write_all(format!("{:?}", frame).as_bytes()).unwrap();
+                    log.write_all(b"\n").unwrap();
                     log.flush().unwrap();
                 }
                 _ => {}
