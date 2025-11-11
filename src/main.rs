@@ -1,5 +1,6 @@
 use crate::{
     api::device::Device,
+    api::ffi::PxcIgnoreErr,
     data_worker::{frame::Frame, particle::ParticleType},
 };
 use std::{io::Write, path::Path};
@@ -56,11 +57,16 @@ fn start_standalone_reader(options: ArgOptions) {
         Err(_) => 80.0,
     };
     println!("[info]Found max voltage of {}V", max_voltage);
-    device.set_high_voltage(100.0).unwrap();
+    device.set_high_voltage(100.0).ignore_error();
 
     let mut muons_found = 0;
     loop {
-        let image_buffer = device.capture_image().unwrap();
+        let image_buffer = device.capture_image();
+        if image_buffer.is_err() {
+            image_buffer.ignore_error();
+            continue;
+        }
+        let image_buffer = image_buffer.unwrap();
 
         let image = image_buffer
             .chunks(device.get_dimensions().0 as usize)

@@ -7,8 +7,21 @@ type CStringPointer = *const c_char;
 pub type PxcBuffer = [std::ffi::c_short; 65536];
 
 pub type PxcResult<T> = Result<T, PxcErr>;
+/// helper trait to ignore PxcErr :3
+pub trait PxcIgnoreErr {
+    fn ignore_error(self);
+}
+impl<T> PxcIgnoreErr for PxcResult<T> {
+    /// consumes the Result and prints the error if it encountered one
+    fn ignore_error(self) {
+        if let Err(ref err) = self {
+            eprintln!("[err]PxcErr caught: {:?}", err);
+        }
+    }
+}
 
 #[derive(Debug)]
+#[repr(i32)]
 pub enum PxcErr {
     NotInitialized = -1,
     InvalidDeviceIndex = -2,
@@ -24,10 +37,10 @@ pub enum PxcErr {
     CannotCalibrate = -12,
     TooManyBadPixels = -13,
     ZestNotLoaded = -14,
-    UnexpectedError = -1000,
+    UnexpectedError(c_int) = -1000,
 }
-impl From<i32> for PxcErr {
-    fn from(val: i32) -> Self {
+impl From<c_int> for PxcErr {
+    fn from(val: c_int) -> Self {
         match val {
             -1 => PxcErr::NotInitialized,
             -2 => PxcErr::InvalidDeviceIndex,
@@ -43,7 +56,7 @@ impl From<i32> for PxcErr {
             -12 => PxcErr::CannotCalibrate,
             -13 => PxcErr::TooManyBadPixels,
             -14 => PxcErr::ZestNotLoaded,
-            _ => PxcErr::UnexpectedError,
+            _ => PxcErr::UnexpectedError(val),
         }
     }
 }
