@@ -80,6 +80,7 @@ unsafe extern "C" {
     pub fn pxcSetBias(index: c_uint, bias: c_double) -> c_int;
     pub fn pxcSetThreshold(index: c_uint, thresholdIndex: c_int, threshold: c_double) -> c_int;
     pub fn pxcSetTimepixMode(index: c_uint, mode: c_int) -> c_int;
+    pub fn pxcSetTimepixCalibrationEnabled(index: c_uint, enabled: bool) -> c_int;
 
     pub fn pxcGetMeasuredFrameCount(index: c_uint) -> c_int;
     pub fn pxcMeasureSingleFrame(

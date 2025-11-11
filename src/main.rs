@@ -10,7 +10,7 @@ fn main() {
 
     let builder = api::handle::DeviceBuilder::new(0)
         .frame_time(0.5)
-        .threshold(10.0);
+        .threshold(0.2);
 
     let device = handle.get_device(builder).unwrap();
 

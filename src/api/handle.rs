@@ -47,6 +47,7 @@ impl PixHandle {
                 let mut height: std::ffi::c_uint = 0;
                 unsafe {
                     pxcSetTimepixMode(builder.index, TpxMode::Tot as i32).check_rc()?;
+                    pxcSetTimepixCalibrationEnabled(builder.index, true).check_rc()?;
                     pxcGetDeviceDimensions(builder.index, &mut width, &mut height).check_rc()?;
                 }
                 let device = TpxDevice {
