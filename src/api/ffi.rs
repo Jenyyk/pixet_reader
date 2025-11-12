@@ -63,15 +63,15 @@ impl From<c_int> for PxcErr {
 
 /// helper trait to check the return code of FFI functions
 pub trait PxcErrCheck {
-    fn check_rc(self) -> PxcResult<()>;
+    fn check_rc(self) -> PxcResult<c_int>;
 }
 impl PxcErrCheck for c_int {
     /// helper function to convert the return code of FFI functions into a `Result`
-    fn check_rc(self) -> PxcResult<()> {
+    fn check_rc(self) -> PxcResult<c_int> {
         if self < 0 {
             return Err(PxcErr::from(self));
         }
-        Ok(())
+        Ok(self)
     }
 }
 
@@ -94,6 +94,7 @@ unsafe extern "C" {
     pub fn pxcSetThreshold(index: c_uint, thresholdIndex: c_int, threshold: c_double) -> c_int;
     pub fn pxcSetTimepixMode(index: c_uint, mode: c_int) -> c_int;
     pub fn pxcSetTimepixCalibrationEnabled(index: c_uint, enabled: bool) -> c_int;
+    pub fn pxcIsTimepixCalibrationEnabled(index: c_uint) -> c_int;
 
     pub fn pxcGetMeasuredFrameCount(index: c_uint) -> c_int;
     pub fn pxcMeasureSingleFrame(

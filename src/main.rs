@@ -57,7 +57,7 @@ fn start_standalone_reader(options: ArgOptions) {
         Err(_) => 80.0,
     };
     println!("[info]Found max voltage of {}V", max_voltage);
-    device.set_high_voltage(100.0).ignore_error();
+    device.set_high_voltage(50.0).ignore_error();
 
     let mut muons_found = 0;
     loop {

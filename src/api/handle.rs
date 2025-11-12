@@ -47,9 +47,26 @@ impl PixHandle {
                 let mut height: std::ffi::c_uint = 0;
                 unsafe {
                     pxcSetTimepixMode(builder.index, TpxMode::Tot as i32).check_rc()?;
-                    pxcSetTimepixCalibrationEnabled(builder.index, true)
-                        .check_rc()
-                        .ignore_error();
+                    // attempt calibration (fails often)
+                    let calibrated = pxcIsTimepixCalibrationEnabled(builder.index).check_rc();
+                    if calibrated.is_err() {
+                        calibrated.ignore_error();
+                    } else {
+                        match calibrated.unwrap_or_else(|_e| {
+                            eprintln!("[err]how");
+                            0
+                        }) {
+                            0 => {
+                                println!("[info]Calibrating device");
+                                pxcSetTimepixCalibrationEnabled(builder.index, true)
+                                    .check_rc()
+                                    .ignore_error()
+                            }
+                            1.. => println!("[info]Device is calibrated"),
+                            _ => {}
+                        };
+                    }
+
                     pxcGetDeviceDimensions(builder.index, &mut width, &mut height).check_rc()?;
                 }
                 let device = TpxDevice {
