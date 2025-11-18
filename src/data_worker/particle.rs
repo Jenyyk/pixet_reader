@@ -1,7 +1,7 @@
 #[derive(Debug, Clone)]
 pub struct Particle {
     pub particle_type: ParticleType,
-    positions: Vec<(usize, usize, i16)>,
+    pub positions: Vec<(usize, usize, i16)>,
 }
 
 impl Particle {

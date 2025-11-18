@@ -1,7 +1,10 @@
 use crate::{
     api::device::Device,
     api::ffi::PxcIgnoreErr,
-    data_worker::{frame::Frame, particle::ParticleType},
+    data_worker::{
+        frame::Frame,
+        particle::{Particle, ParticleType},
+    },
 };
 use std::{io::Write, path::Path};
 
@@ -10,11 +13,15 @@ mod data_worker;
 
 struct ArgOptions {
     pub save_mode: SaveMode,
+    pub filter: Box<dyn Fn(&Particle) -> bool>,
+    pub save_images: bool,
 }
 
 fn main() {
     let mut standalone = false;
     let mut save_mode = SaveMode::AlmostJson;
+    let mut filter: Box<dyn Fn(&Particle) -> bool> = Box::new(|_particle| true);
+    let mut save_images = false;
 
     let mut args = std::env::args();
     while let Some(arg) = args.next() {
@@ -30,11 +37,26 @@ fn main() {
                 "rak" => save_mode = SaveMode::RawRakMatrix,
                 _ => panic!("Invalid flag set for --save-mode"),
             },
+            "--filter" | "-F" => {
+                filter = make_filter(
+                    args.next()
+                        .expect("Empty flag set for --filter")
+                        .to_ascii_lowercase()
+                        .split(",")
+                        .map(|str| str.to_owned())
+                        .collect::<Vec<String>>(),
+                )
+            }
+            "--save-images" | "-I" => save_images = true,
             _ => {}
         }
     }
 
-    let arg_options: ArgOptions = ArgOptions { save_mode };
+    let arg_options: ArgOptions = ArgOptions {
+        save_mode,
+        filter,
+        save_images,
+    };
 
     if standalone {
         start_standalone_reader(arg_options);
@@ -59,7 +81,7 @@ fn start_standalone_reader(options: ArgOptions) {
     println!("[info]Found max voltage of {}V", max_voltage);
     device.set_high_voltage(50.0).ignore_error();
 
-    let mut muons_found = 0;
+    let mut particles_found = 0;
     loop {
         let image_buffer = device.capture_image();
         if image_buffer.is_err() {
@@ -81,23 +103,28 @@ fn start_standalone_reader(options: ArgOptions) {
         }
 
         for particle in frame.get_particles() {
-            match particle.particle_type {
-                ParticleType::PossibleMuon(size) => {
-                    println!("[info]{}: Found muon of size {}", muons_found, size);
-                    device
-                        .save_last_frame(format!("muon{}.png", muons_found))
-                        .unwrap();
-                    muons_found += 1;
-                    save_frame("log.txt", frame, options.save_mode.clone()).unwrap();
-                    break;
+            if (options.filter)(&particle) {
+                println!(
+                    "[info]{}Found particle {:?}",
+                    particles_found, particle.particle_type
+                );
+                save_frame("log.txt", frame.clone(), options.save_mode).unwrap();
+                if options.save_images {
+                    if let Err(why) = device.save_last_frame(format!(
+                        "particle{particles_found}{:?}.png",
+                        &particle.particle_type
+                    )) {
+                        eprintln!("[err]Failed to save frame: {why:?}");
+                    }
                 }
-                _ => {}
+                particles_found += 1;
+                break;
             }
         }
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 enum SaveMode {
     AlmostJson,
     RawRakMatrix,
@@ -123,10 +150,55 @@ fn save_frame(path: impl AsRef<Path>, frame: Frame, mode: SaveMode) -> std::io::
                 file.write_all(string.as_bytes())?;
                 file.write_all(b"\n")?;
             }
-            file.write_all(b"----------")?; // 10 pomlček
+            file.write_all(b"----------\n")?; // 10 pomlček
         }
     }
     file.flush()?;
 
     Ok(())
+}
+
+fn make_filter(to_filter: Vec<String>) -> Box<dyn Fn(&Particle) -> bool> {
+    Box::new(move |particle| {
+        if to_filter.is_empty() {
+            return true;
+        }
+        for t in &to_filter {
+            match t.as_str() {
+                "muon" => {
+                    if matches!(particle.particle_type, ParticleType::PossibleMuon(_)) {
+                        return true;
+                    }
+                }
+                _ => {}
+            }
+        }
+        false
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn filters_work() {
+        let filter = make_filter(vec![String::from("muon")]);
+        let muon = Particle {
+            particle_type: ParticleType::PossibleMuon(5),
+            positions: vec![],
+        };
+        let diff_particle = Particle {
+            particle_type: ParticleType::Unknown,
+            positions: vec![],
+        };
+
+        assert!(filter(&muon));
+        assert!(!filter(&diff_particle));
+
+        let filter = make_filter(vec![]);
+
+        assert!(filter(&muon));
+        assert!(filter(&diff_particle));
+    }
 }
