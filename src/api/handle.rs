@@ -40,7 +40,7 @@ impl PixHandle {
     }
 
     /// Builds device from a `DeviceBuilder`
-    pub fn get_device(&self, builder: DeviceBuilder) -> PxcResult<impl Device> {
+    pub fn get_device(&self, builder: DeviceBuilder) -> PxcResult<impl Device + use<>> {
         match builder.info.r#type {
             DevType::Tpx => {
                 let mut width: std::ffi::c_uint = 0;
@@ -73,6 +73,7 @@ impl PixHandle {
                     index: builder.index,
                     frame_time: builder.frame_time.unwrap_or(2.0),
                     dimensions: (width, height),
+                    high_threshold: 0.0,
                 };
                 device
                     .set_high_voltage(builder.high_voltage.unwrap_or(40.0))
@@ -119,6 +120,8 @@ impl DeviceBuilder {
     }
 
     /// time to capture a frame for in seconds
+    ///
+    /// defaults to 2s if unset
     pub fn frame_time(mut self, seconds: f64) -> Self {
         self.frame_time = Some(seconds);
         self

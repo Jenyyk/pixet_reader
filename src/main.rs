@@ -10,6 +10,7 @@ use std::{io::Write, path::Path};
 
 mod api;
 mod data_worker;
+mod library;
 
 struct ArgOptions {
     pub save_mode: SaveMode,
@@ -60,15 +61,17 @@ fn main() {
         }
     }
 
-    let arg_options: ArgOptions = ArgOptions {
-        save_mode,
-        filter,
-        save_images,
-        threshold,
-    };
-
     if standalone {
+        let arg_options: ArgOptions = ArgOptions {
+            save_mode,
+            filter,
+            save_images,
+            threshold,
+        };
         start_standalone_reader(arg_options);
+        std::process::exit(0);
+    } else {
+        library::start_library();
         std::process::exit(0);
     }
 }
@@ -119,7 +122,7 @@ fn start_standalone_reader(options: ArgOptions) {
                 );
                 save_frame("log.txt", frame.clone(), options.save_mode).unwrap();
                 if options.save_images {
-                    if let Err(why) = device.save_last_frame(format!(
+                    if let Err(why) = device.save_last_frame(&format!(
                         "particle{particles_found}{:?}.png",
                         &particle.particle_type
                     )) {
