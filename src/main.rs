@@ -15,6 +15,7 @@ struct ArgOptions {
     pub save_mode: SaveMode,
     pub filter: Box<dyn Fn(&Particle) -> bool>,
     pub save_images: bool,
+    pub threshold: f64,
 }
 
 fn main() {
@@ -22,6 +23,7 @@ fn main() {
     let mut save_mode = SaveMode::AlmostJson;
     let mut filter: Box<dyn Fn(&Particle) -> bool> = Box::new(|_particle| true);
     let mut save_images = false;
+    let mut threshold = 0.2;
 
     let mut args = std::env::args();
     while let Some(arg) = args.next() {
@@ -48,6 +50,12 @@ fn main() {
                 )
             }
             "--save-images" | "-I" => save_images = true,
+            "--threshold" | "-T" => {
+                threshold = args.next()
+                    .expect("Empty flag set for --threshold")
+                    .parse::<f64>()
+                    .expect("Invalid flag set for --threshold");
+            }
             _ => {}
         }
     }
@@ -56,6 +64,7 @@ fn main() {
         save_mode,
         filter,
         save_images,
+        threshold,
     };
 
     if standalone {
@@ -70,7 +79,7 @@ fn start_standalone_reader(options: ArgOptions) {
 
     let builder = api::handle::DeviceBuilder::new(0)
         .frame_time(0.5)
-        .threshold(0.2);
+        .threshold(options.threshold);
 
     let device = handle.get_device(builder).unwrap();
 
