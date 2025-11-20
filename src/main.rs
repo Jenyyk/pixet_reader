@@ -16,7 +16,7 @@ struct ArgOptions {
     pub save_mode: SaveMode,
     pub filter: Box<dyn Fn(&Particle) -> bool>,
     pub save_images: bool,
-    pub threshold: f64,
+    pub thresholds: (f64, f64),
 }
 
 fn main() {
@@ -24,7 +24,8 @@ fn main() {
     let mut save_mode = SaveMode::AlmostJson;
     let mut filter: Box<dyn Fn(&Particle) -> bool> = Box::new(|_particle| true);
     let mut save_images = false;
-    let mut threshold = 0.2;
+    let mut threshold_min = 0.2;
+    let mut threshold_max = 0.0;
 
     let mut args = std::env::args();
     while let Some(arg) = args.next() {
@@ -51,8 +52,16 @@ fn main() {
                 )
             }
             "--save-images" | "-I" => save_images = true,
-            "--threshold" | "-T" => {
-                threshold = args.next()
+            "--threshold-min" => {
+                threshold_min = args
+                    .next()
+                    .expect("Empty flag set for --threshold")
+                    .parse::<f64>()
+                    .expect("Invalid flag set for --threshold");
+            }
+            "--threshold-max" => {
+                threshold_max = args
+                    .next()
                     .expect("Empty flag set for --threshold")
                     .parse::<f64>()
                     .expect("Invalid flag set for --threshold");
@@ -66,7 +75,7 @@ fn main() {
             save_mode,
             filter,
             save_images,
-            threshold,
+            thresholds: (threshold_min, threshold_max),
         };
         start_standalone_reader(arg_options);
         std::process::exit(0);
@@ -82,9 +91,9 @@ fn start_standalone_reader(options: ArgOptions) {
 
     let builder = api::handle::DeviceBuilder::new(0)
         .frame_time(0.5)
-        .threshold(options.threshold);
+        .threshold(options.thresholds.0);
 
-    let device = handle.get_device(builder).unwrap();
+    let mut device = handle.get_device(builder).unwrap();
 
     let max_voltage = match device.get_voltage_range() {
         Ok((_min, max)) => max,
@@ -92,6 +101,8 @@ fn start_standalone_reader(options: ArgOptions) {
     };
     println!("[info]Found max voltage of {}V", max_voltage);
     device.set_high_voltage(50.0).ignore_error();
+
+    device.set_software_high_threshold(options.thresholds.1);
 
     let mut particles_found = 0;
     loop {
