@@ -74,12 +74,13 @@ impl PixHandle {
                     frame_time: builder.frame_time.unwrap_or(2.0),
                     dimensions: (width, height),
                     high_threshold: 0.0,
+                    low_threshold: 0.0,
                 };
                 device
                     .set_high_voltage(builder.high_voltage.unwrap_or(40.0))
                     .ignore_error();
                 device
-                    .set_threshold(builder.threshold.unwrap_or(200.0))
+                    .set_threshold(builder.hardware_threshold.unwrap_or(0.5))
                     .ignore_error();
                 Ok(device)
             }
@@ -102,7 +103,7 @@ pub struct DeviceBuilder {
     info: CDevInfo,
     frame_time: Option<std::ffi::c_double>,
     high_voltage: Option<std::ffi::c_double>,
-    threshold: Option<std::ffi::c_double>,
+    hardware_threshold: Option<std::ffi::c_double>,
 }
 
 impl DeviceBuilder {
@@ -137,8 +138,8 @@ impl DeviceBuilder {
     /// values 100 - 500
     ///
     /// defaults to 200 if not set
-    pub fn threshold(mut self, threshold: f64) -> Self {
-        self.threshold = Some(threshold);
+    pub fn hardware_threshold(mut self, threshold: f64) -> Self {
+        self.hardware_threshold = Some(threshold);
         self
     }
 }

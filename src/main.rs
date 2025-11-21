@@ -16,7 +16,7 @@ struct ArgOptions {
     pub save_mode: SaveMode,
     pub filter: Box<dyn Fn(&Particle) -> bool>,
     pub save_images: bool,
-    pub thresholds: (f64, f64),
+    pub thresholds: (f64, f64, f64),
 }
 
 fn main() {
@@ -24,7 +24,8 @@ fn main() {
     let mut save_mode = SaveMode::AlmostJson;
     let mut filter: Box<dyn Fn(&Particle) -> bool> = Box::new(|_particle| true);
     let mut save_images = false;
-    let mut threshold_min = 0.2;
+    let mut threshold_pix = 0.2;
+    let mut threshold_min = 0.0;
     let mut threshold_max = 0.0;
 
     let mut args = std::env::args();
@@ -52,6 +53,13 @@ fn main() {
                 )
             }
             "--save-images" | "-I" => save_images = true,
+            "--threshold-pix" => {
+                threshold_pix = args
+                    .next()
+                    .expect("Empty flag set for --threshold-pix")
+                    .parse::<f64>()
+                    .expect("Invalid flag set for --threshold-pix");
+            }
             "--threshold-min" => {
                 threshold_min = args
                     .next()
@@ -75,7 +83,7 @@ fn main() {
             save_mode,
             filter,
             save_images,
-            thresholds: (threshold_min, threshold_max),
+            thresholds: (threshold_min, threshold_max, threshold_pix),
         };
         start_standalone_reader(arg_options);
         std::process::exit(0);
@@ -91,7 +99,7 @@ fn start_standalone_reader(options: ArgOptions) {
 
     let builder = api::handle::DeviceBuilder::new(0)
         .frame_time(0.5)
-        .threshold(options.thresholds.0);
+        .hardware_threshold(options.thresholds.2);
 
     let mut device = handle.get_device(builder).unwrap();
 
@@ -103,6 +111,7 @@ fn start_standalone_reader(options: ArgOptions) {
     device.set_high_voltage(50.0).ignore_error();
 
     device.set_software_high_threshold(options.thresholds.1);
+    device.set_software_low_threshold(options.thresholds.0);
 
     let mut particles_found = 0;
     loop {

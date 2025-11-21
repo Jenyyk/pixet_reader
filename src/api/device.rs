@@ -17,6 +17,7 @@ pub trait Device: Send + Sync {
     fn set_frame_time(&mut self, seconds: c_double) -> PxcResult<()>;
 
     fn set_software_high_threshold(&mut self, high_threshold: f64);
+    fn set_software_low_threshold(&mut self, low_threshold: f64);
 }
 
 pub enum TpxMode {
@@ -32,6 +33,7 @@ pub struct TpxDevice {
     pub index: std::ffi::c_uint,
     pub frame_time: std::ffi::c_double,
     pub dimensions: (std::ffi::c_uint, std::ffi::c_uint),
+    pub low_threshold: f64,
     pub high_threshold: f64,
 }
 
@@ -53,6 +55,11 @@ impl Device for TpxDevice {
                 if *val > self.high_threshold as std::ffi::c_short {
                     *val = 0;
                 }
+            }
+        }
+        for val in data_buf.iter_mut() {
+            if *val < self.low_threshold as std::ffi::c_short {
+                *val = 0;
             }
         }
         Ok(data_buf)
@@ -99,5 +106,8 @@ impl Device for TpxDevice {
 
     fn set_software_high_threshold(&mut self, high_threshold: f64) {
         self.high_threshold = high_threshold;
+    }
+    fn set_software_low_threshold(&mut self, low_threshold: f64) {
+        self.low_threshold = low_threshold;
     }
 }
