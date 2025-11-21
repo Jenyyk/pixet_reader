@@ -162,13 +162,31 @@ where
     T: FromStr,
     <T as FromStr>::Err: std::fmt::Debug,
 {
-    arg.unwrap_or_else(|| {
-        eprintln!("[err]Error parsing command: None");
-        "err"
-    })
-    .parse::<T>()
-    .unwrap_or_else(|why| {
-        eprintln!("[err]Error parsing number: {why:?}");
-        default
-    })
+    match arg {
+        Some(val) => val.parse::<T>().unwrap_or_else(|why| {
+            eprintln!("[err]Error parsing number {arg:?}: {why:?}");
+            default
+        }),
+        None => {
+            eprintln!("[err]Error parsing command: None");
+            default
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parsing_args_works() {
+        let num = parse_arg_to_num(Some("42"), 0);
+        assert_eq!(num, 42);
+
+        let num = parse_arg_to_num(Some("invalid"), 0);
+        assert_eq!(num, 0);
+
+        let num = parse_arg_to_num(None, 0);
+        assert_eq!(num, 0);
+    }
 }
