@@ -1,3 +1,4 @@
+use crate::api::ffi::PxcIgnoreErr;
 use crate::api::{device::Device, handle::DeviceBuilder};
 use crate::data_worker::frame::Frame;
 use std::collections::HashMap;
@@ -41,20 +42,27 @@ pub fn start_library() {
                             },
                         );
                     }
-                    let device_handle = devices.get(&index).unwrap();
+                    let device_holder = devices.get(&index).unwrap();
 
-                    let device_clone = device_handle.device.clone();
-                    let buffer_clone = device_handle.buffer_queue.clone();
+                    let device_clone = device_holder.device.clone();
+                    let buffer_clone = device_holder.buffer_queue.clone();
 
                     // spawn thread to capture data of device
                     thread::spawn(move || start_dev_loop(device_clone, buffer_clone));
 
-                    set_device_settings(index, command);
+                    set_device_settings(device_holder, command);
                     break;
                 }
                 "set" => {
                     let index: u32 = command.next().unwrap_or("0").parse::<u32>().unwrap_or(0);
-                    set_device_settings(index, command);
+                    let device_holder = match devices.get(&index) {
+                        Some(holder) => holder,
+                        None => {
+                            eprintln!("[err]Device not created");
+                            break;
+                        }
+                    };
+                    set_device_settings(device_holder, command);
                     break;
                 }
                 "get" => {
@@ -73,7 +81,18 @@ pub fn start_library() {
     }
 }
 
-fn set_device_settings<'a>(_index: u32, _command: impl Iterator<Item = &'a str>) {}
+fn set_device_settings<'a>(holder: &DeviceHolder, mut command: impl Iterator<Item = &'a str>) {
+    let device_clone = holder.device.clone();
+    while let Some(arg) = command.next() {
+        match arg {
+            "frame-time" => {
+                let mut device = device_clone.write().unwrap();
+                device.set_frame_time(command.next().unwrap_or("2.0").parse::<f64>().unwrap_or(2.0)).ignore_error();
+            },
+            _ => {},
+        }
+    }
+}
 
 fn start_dev_loop(device: Arc<RwLock<Box<dyn Device>>>, buffer: Arc<RwLock<Vec<Frame>>>) {
     loop {
