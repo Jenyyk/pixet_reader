@@ -74,7 +74,7 @@ fn main() {
                     .parse::<f64>()
                     .expect("Invalid flag set for --threshold");
             }
-            _ => panic!("Invalid flag: '{}'", arg),
+            _ => eprintln!("Invalid flag: '{}'", arg),
         }
     }
 
