@@ -1,3 +1,5 @@
+#![allow(clippy::needless_range_loop)]
+
 use crate::data_worker::particle::Particle;
 use std::collections::{HashMap, HashSet};
 

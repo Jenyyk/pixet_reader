@@ -26,23 +26,24 @@ pub fn start_library() {
             match arg {
                 "add" => {
                     let index: u32 = command.next().unwrap_or("0").parse::<u32>().unwrap_or(0);
-                    if !devices.contains_key(&index) {
-                        let builder = DeviceBuilder::new(index);
-                        let device = match handle.get_device(builder) {
-                            Ok(device) => device,
-                            Err(why) => {
-                                eprintln!("[err]Failed to get device: {why:?}");
-                                break;
-                            }
-                        };
-                        devices.insert(
-                            index,
-                            DeviceHolder {
-                                device: Arc::new(RwLock::new(Box::new(device))),
-                                buffer_queue: Arc::new(RwLock::new(Vec::new())),
-                            },
-                        );
+                    if devices.contains_key(&index) {
+                        eprintln!("[err]Device already exists");
                     }
+                    let builder = DeviceBuilder::new(index);
+                    let device = match handle.get_device(builder) {
+                        Ok(device) => device,
+                        Err(why) => {
+                            eprintln!("[err]Failed to get device: {why:?}");
+                            break;
+                        }
+                    };
+                    devices.insert(
+                        index,
+                        DeviceHolder {
+                            device: Arc::new(RwLock::new(Box::new(device))),
+                            buffer_queue: Arc::new(RwLock::new(Vec::new())),
+                        },
+                    );
                     let device_holder = devices.get(&index).unwrap();
 
                     let device_clone = device_holder.device.clone();

@@ -141,13 +141,13 @@ fn start_standalone_reader(options: ArgOptions) {
                     particles_found, particle.particle_type
                 );
                 save_frame("log.txt", frame.clone(), options.save_mode).unwrap();
-                if options.save_images {
-                    if let Err(why) = device.save_last_frame(&format!(
+                if options.save_images
+                    && let Err(why) = device.save_last_frame(&format!(
                         "particle{particles_found}{:?}.png",
                         &particle.particle_type
-                    )) {
-                        eprintln!("[err]Failed to save frame: {why:?}");
-                    }
+                    ))
+                {
+                    eprintln!("[err]Failed to save frame: {why:?}");
                 }
                 particles_found += 1;
                 break;
@@ -190,6 +190,7 @@ fn save_frame(path: impl AsRef<Path>, frame: Frame, mode: SaveMode) -> std::io::
     Ok(())
 }
 
+#[allow(clippy::single_match)]
 fn make_filter(to_filter: Vec<String>) -> Box<dyn Fn(&Particle) -> bool> {
     Box::new(move |particle| {
         if to_filter.is_empty() {
