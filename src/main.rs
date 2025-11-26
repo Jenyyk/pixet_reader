@@ -19,14 +19,20 @@ struct ArgOptions {
     pub thresholds: (f64, f64, f64),
 }
 
+const THRESHOLD_MIN_DEFAULT: f64 = 0.0;
+const THRESHOLD_MAX_DEFAULT: f64 = 0.0;
+const THRESHOLD_PIX_DEFAULT: f64 = 0.2;
+const HIGH_VOLTAGE_DEFAULT: f64 = 50.0;
+const FRAME_TIME_DEFAULT: f64 = 2.0;
+
 fn main() {
     let mut standalone = false;
     let mut save_mode = SaveMode::AlmostJson;
     let mut filter: Box<dyn Fn(&Particle) -> bool> = Box::new(|_particle| true);
     let mut save_images = false;
-    let mut threshold_pix = 0.2;
-    let mut threshold_min = 0.0;
-    let mut threshold_max = 0.0;
+    let mut threshold_pix = THRESHOLD_PIX_DEFAULT;
+    let mut threshold_min = THRESHOLD_MIN_DEFAULT;
+    let mut threshold_max = THRESHOLD_MAX_DEFAULT;
 
     let mut args = std::env::args();
     while let Some(arg) = args.next() {
@@ -108,7 +114,7 @@ fn start_standalone_reader(options: ArgOptions) {
         Err(_) => 80.0,
     };
     println!("[info]Found max voltage of {}V", max_voltage);
-    device.set_high_voltage(50.0).ignore_error();
+    device.set_high_voltage(HIGH_VOLTAGE_DEFAULT).ignore_error();
 
     device.set_software_high_threshold(options.thresholds.1);
     device.set_software_low_threshold(options.thresholds.0);
@@ -128,6 +134,9 @@ fn start_standalone_reader(options: ArgOptions) {
             .collect::<Vec<_>>();
 
         let mut frame = data_worker::frame::Frame::new(image);
+        // this is the kernel size
+        // yes it is a magic number
+        // no i do not care
         frame.count_particles(12);
 
         for particle in frame.get_particles_mut() {

@@ -90,27 +90,39 @@ fn set_device_settings<'a>(holder: &DeviceHolder, mut command: impl Iterator<Ite
             "frame-time" => {
                 let mut device = device_clone.write().unwrap();
                 device
-                    .set_frame_time(parse_arg_to_num(command.next(), 2.0))
+                    .set_frame_time(parse_arg_to_num(command.next(), crate::FRAME_TIME_DEFAULT))
                     .ignore_error();
             }
             "threshold-max" => {
                 let mut device = device_clone.write().unwrap();
-                device.set_software_high_threshold(parse_arg_to_num(command.next(), 0.0));
+                device.set_software_high_threshold(parse_arg_to_num(
+                    command.next(),
+                    crate::THRESHOLD_MAX_DEFAULT,
+                ));
             }
             "threshold-min" => {
                 let mut device = device_clone.write().unwrap();
-                device.set_software_low_threshold(parse_arg_to_num(command.next(), 0.0));
+                device.set_software_low_threshold(parse_arg_to_num(
+                    command.next(),
+                    crate::THRESHOLD_MIN_DEFAULT,
+                ));
             }
             "threshold-pix" => {
                 let device = device_clone.write().unwrap();
                 device
-                    .set_threshold(parse_arg_to_num(command.next(), 0.2))
+                    .set_threshold(parse_arg_to_num(
+                        command.next(),
+                        crate::THRESHOLD_PIX_DEFAULT,
+                    ))
                     .ignore_error();
             }
             "high-voltage" => {
                 let device = device_clone.write().unwrap();
                 device
-                    .set_high_voltage(parse_arg_to_num(command.next(), 0.0))
+                    .set_high_voltage(parse_arg_to_num(
+                        command.next(),
+                        crate::HIGH_VOLTAGE_DEFAULT,
+                    ))
                     .ignore_error();
             }
             _ => eprintln!("Invalid command: {arg}"),
