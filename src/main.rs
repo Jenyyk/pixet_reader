@@ -25,7 +25,7 @@ const THRESHOLD_PIX_DEFAULT: f64 = 0.2;
 const HIGH_VOLTAGE_DEFAULT: f64 = 50.0;
 const FRAME_TIME_DEFAULT: f64 = 2.0;
 
-fn main() {
+fn main() -> () {
     let mut standalone = false;
     let mut save_mode = SaveMode::AlmostJson;
     let mut filter: Box<dyn Fn(&Particle) -> bool> = Box::new(|_particle| true);
@@ -92,10 +92,10 @@ fn main() {
             thresholds: (threshold_min, threshold_max, threshold_pix),
         };
         start_standalone_reader(arg_options);
-        std::process::exit(0);
+        return;
     } else {
         library::start_library();
-        std::process::exit(0);
+        return;
     }
 }
 
